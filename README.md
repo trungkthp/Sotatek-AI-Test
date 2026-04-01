@@ -59,22 +59,32 @@ Python: Version 3.8 hoặc cao hơn.
 Hardware: 8GB+ RAM (Khuyến khích sử dụng GPU).
 
 **2. Installation**
-Bash
-## Clone the repository
+
+
+**- Clone the repository:**
+
 git clone [https://github.com/trungkthp/Sotatek-AI-Test.git](https://github.com/trungkthp/Sotatek-AI-Test.git)
+
 cd Sotatek-AI-Test
 
-## Set up virtual environment
+**- Set up virtual environment:**
+
 python3 -m venv venv
+
 source venv/bin/activate
 
-## Install dependencies
+**- Install dependencies:**
+
 pip install -r requirements.txt
+
 pip install 'git+[https://github.com/facebookresearch/detectron2.git](https://github.com/facebookresearch/detectron2.git)'
 
 **3. Model Weights Setup**
+
 Do giới hạn kích thước tệp của GitHub, trọng số mô hình (model_final.pth) được lưu trữ bên ngoài.
 
-Download Link: Google Drive Link
+
+Download Link: [Google Drive Link](https://drive.google.com/drive/folders/1TTVcZm9NxX8nwmYFx3JskfVWY6wWngoi?usp=drive_link)
+
 
 Placement: Tải xuống và di chuyển tệp vào thư mục output/.
