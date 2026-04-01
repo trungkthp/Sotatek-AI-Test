@@ -1,8 +1,8 @@
 streamlit
 opencv-python-headless
-torch
-torchvision
+torch==2.1.0
+torchvision==0.16.0
 distro
 easyocr
 --find-links https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch2.1/index.html
-detectron2
+detectron2==0.6
