@@ -2,3 +2,4 @@ libgl1
 libglib2.0-dev
 build-essential
 python3-dev
+ninja-build
