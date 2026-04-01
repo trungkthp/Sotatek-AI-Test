@@ -39,24 +39,26 @@ Sotatek-AI-Test/
 ├── 📄 requirements.txt      # Python dependencies
 ├── 📄 .gitignore            # Excludes large binaries and cache files
 └── 📚 README.md             # Project documentation
-IV. Technology Stack
+```
+
+## **IV. Technology Stack**
 AI/ML Frameworks: Detectron2 (Facebook Research), PyTorch, EasyOCR.
 
 Frontend: Streamlit for real-time interactive dashboards.
 
 Computer Vision: OpenCV-Python, Pillow.
 
-Data Handling: NumPy, Pandas (for table data structuring).
+Data Handling: NumPy, Pandas.
 
-V. Quick Start Guide
-1. Prerequisites
+## **V. Quick Start Guide**
+**1. Prerequisites**
 OS: Ubuntu 20.04+ (Recommended).
 
 Python: Version 3.8 hoặc cao hơn.
 
 Hardware: 8GB+ RAM (Khuyến khích sử dụng GPU).
 
-2. Installation
+**2. Installation**
 Bash
 # Clone the repository
 git clone [https://github.com/trungkthp/Sotatek-AI-Test.git](https://github.com/trungkthp/Sotatek-AI-Test.git)
@@ -69,7 +71,7 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 pip install 'git+[https://github.com/facebookresearch/detectron2.git](https://github.com/facebookresearch/detectron2.git)'
-3. Model Weights Setup
+**3. Model Weights Setup**
 Do giới hạn kích thước tệp của GitHub, trọng số mô hình (model_final.pth) được lưu trữ bên ngoài.
 
 Download Link: Google Drive Link
