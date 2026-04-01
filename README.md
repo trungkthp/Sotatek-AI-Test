@@ -1,35 +1,34 @@
-🛠️ Engineering Drawing Analysis: Detection & OCR Pipeline 🏛️
+# **🛠️ Engineering Drawing Analysis: Detection & OCR Pipeline 🏛️**
 
 A comprehensive AI-powered system designed to automate the extraction of information from technical engineering drawings. This project utilizes Faster R-CNN (via Detectron2) for object detection and EasyOCR for intelligent text recognition, all integrated into a seamless Streamlit dashboard.
 
-I. Overview
+---
 
-This system addresses the challenge of manual data entry in mechanical engineering by providing:
+## **I. Overview**
 
-Object Detection: High-accuracy identification of components such as PartDrawings, Notes, and Tables.
+* This system addresses the challenge of manual data entry in mechanical engineering by providing:
+* **Object Detection**: High-accuracy identification of components such as PartDrawings, Notes, and Tables.
+* **Intelligent OCR**: Automated text extraction from localized regions of interest.
+* **Heuristic Post-processing**: A custom logic layer that corrects labels based on text density and confidence scores to ensure data integrity.
 
-Intelligent OCR: Automated text extraction from localized regions of interest.
+---
 
-Heuristic Post-processing: A custom logic layer that corrects labels based on text density and confidence scores to ensure data integrity.
-
-II. System Architecture
+## **II. System Architecture**
 
 The pipeline follows a modular flow:
 
-Input: Technical drawing upload.
+1. **Input**: Technical drawing upload.
+2. **Inference**: Detectron2 identifies bounding boxes for various entities.
+3. **Cropping**: Targeted regions are cropped for localized analysis.
+4. **OCR Engine**: EasyOCR processes the crops to extract alphanumeric data.
+5. **Refinement**: Post-processing scripts validate and correct labels.
+6. **Output**: Visual results on the dashboard and structured data export.
 
-Inference: Detectron2 identifies bounding boxes for various entities.
+---
 
-Cropping: Targeted regions are cropped for localized analysis.
+## **III. Project Structure**
 
-OCR Engine: EasyOCR processes the crops to extract alphanumeric data.
-
-Refinement: Post-processing scripts validate and correct labels.
-
-Output: Visual results on the dashboard and structured data export.
-
-III. Project Structure
-
+```text
 Sotatek-AI-Test/
 ├── 🖥️ app.py                # Main Streamlit application (UI & Logic)
 ├── 📁 output/               # Model weights and inference artifacts
@@ -40,10 +39,7 @@ Sotatek-AI-Test/
 ├── 📄 requirements.txt      # Python dependencies
 ├── 📄 .gitignore            # Excludes large binaries and cache files
 └── 📚 README.md             # Project documentation
-
-
 IV. Technology Stack
-
 AI/ML Frameworks: Detectron2 (Facebook Research), PyTorch, EasyOCR.
 
 Frontend: Streamlit for real-time interactive dashboards.
@@ -53,17 +49,15 @@ Computer Vision: OpenCV-Python, Pillow.
 Data Handling: NumPy, Pandas (for table data structuring).
 
 V. Quick Start Guide
-
 1. Prerequisites
-
 OS: Ubuntu 20.04+ (Recommended).
 
-Python: Version 3.8 or higher.
+Python: Version 3.8 hoặc cao hơn.
 
-Hardware: 8GB+ RAM (GPU recommended).
+Hardware: 8GB+ RAM (Khuyến khích sử dụng GPU).
 
 2. Installation
-
+Bash
 # Clone the repository
 git clone [https://github.com/trungkthp/Sotatek-AI-Test.git](https://github.com/trungkthp/Sotatek-AI-Test.git)
 cd Sotatek-AI-Test
@@ -75,12 +69,9 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 pip install 'git+[https://github.com/facebookresearch/detectron2.git](https://github.com/facebookresearch/detectron2.git)'
-
-
 3. Model Weights Setup
-
-Due to GitHub's file size limits, the pre-trained weights (model_final.pth) are hosted externally.
+Do giới hạn kích thước tệp của GitHub, trọng số mô hình (model_final.pth) được lưu trữ bên ngoài.
 
 Download Link: Google Drive Link
 
-Placement: Download and move the file into the output/ directory.
+Placement: Tải xuống và di chuyển tệp vào thư mục output/.
