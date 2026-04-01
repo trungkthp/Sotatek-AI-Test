@@ -60,15 +60,15 @@ Hardware: 8GB+ RAM (Khuyến khích sử dụng GPU).
 
 **2. Installation**
 Bash
-# Clone the repository
+## Clone the repository
 git clone [https://github.com/trungkthp/Sotatek-AI-Test.git](https://github.com/trungkthp/Sotatek-AI-Test.git)
 cd Sotatek-AI-Test
 
-# Set up virtual environment
+## Set up virtual environment
 python3 -m venv venv
 source venv/bin/activate
 
-# Install dependencies
+## Install dependencies
 pip install -r requirements.txt
 pip install 'git+[https://github.com/facebookresearch/detectron2.git](https://github.com/facebookresearch/detectron2.git)'
 **3. Model Weights Setup**
