@@ -71,6 +71,7 @@ source venv/bin/activate
 ## Install dependencies
 pip install -r requirements.txt
 pip install 'git+[https://github.com/facebookresearch/detectron2.git](https://github.com/facebookresearch/detectron2.git)'
+
 **3. Model Weights Setup**
 Do giới hạn kích thước tệp của GitHub, trọng số mô hình (model_final.pth) được lưu trữ bên ngoài.
 
