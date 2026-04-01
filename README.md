@@ -19,13 +19,7 @@ The pipeline follows a modular flow:
 * Refinement: Post-processing scripts validate and correct labels (e.g., distinguishing between a small Table and a large Note).
 * Output: Visual results on the dashboard and structured data export.
 
-**III. Project Structure**
-
-Sotatek-AI-Test/
-│
-├── 🖥️ app.py                # Main Streamlit application (UI \& Logic)
-├── 📁 output/               # Model weights and inference artifacts
-## III. Project Structure
+**III. Project Structure
 
 ```text
 Sotatek-AI-Test/
@@ -40,6 +34,7 @@ Sotatek-AI-Test/
 ├── 📄 requirements.txt      # Python dependencies
 ├── 📄 .gitignore            # Excludes large binaries and cache files
 └── 📚 README.md             # Project documentation│   └── model\_final.pth      # Pre-trained Faster R-CNN weights
+
 **IV. Technology Stack**
 
 * AI/ML Frameworks: Detectron2 (Facebook Research), PyTorch, EasyOCR.
