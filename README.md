@@ -39,6 +39,7 @@ Sotatek-AI-Test/
 ├── 📄 requirements.txt      # Python dependencies
 ├── 📄 .gitignore            # Excludes large binaries and cache files
 └── 📚 README.md             # Project documentation
+```
 IV. Technology Stack
 AI/ML Frameworks: Detectron2 (Facebook Research), PyTorch, EasyOCR.
 
