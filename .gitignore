@@ -1,0 +1,10 @@
+json_outputs/
+output/
+crop_results/
+dataset/
+__pycache__/
+*.pth
+*.jpg
+*.png
+venv/
+.env
