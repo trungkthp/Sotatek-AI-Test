@@ -42,38 +42,38 @@ Sotatek-AI-Test/
 ```
 
 ## **IV. Technology Stack**
-AI/ML Frameworks: Detectron2 (Facebook Research), PyTorch, EasyOCR.
+- AI/ML Frameworks: Detectron2 (Facebook Research), PyTorch, EasyOCR.
 
-Frontend: Streamlit for real-time interactive dashboards.
+- Frontend: Streamlit for real-time interactive dashboards.
 
-Computer Vision: OpenCV-Python, Pillow.
+- Computer Vision: OpenCV-Python, Pillow.
 
-Data Handling: NumPy, Pandas.
+- Data Handling: NumPy, Pandas.
 
 ## **V. Quick Start Guide**
 **1. Prerequisites**
-OS: Ubuntu 20.04+ (Recommended).
+- OS: Ubuntu 20.04+ (Recommended).
 
-Python: Version 3.8 hoặc cao hơn.
+- Python: Version 3.8 hoặc cao hơn.
 
-Hardware: 8GB+ RAM (Khuyến khích sử dụng GPU).
+- Hardware: 8GB+ RAM (Khuyến khích sử dụng GPU).
 
 **2. Installation**
 
 
-**- Clone the repository:**
+**Clone the repository:**
 
 git clone [https://github.com/trungkthp/Sotatek-AI-Test.git](https://github.com/trungkthp/Sotatek-AI-Test.git)
 
 cd Sotatek-AI-Test
 
-**- Set up virtual environment:**
+**Set up virtual environment:**
 
 python3 -m venv venv
 
 source venv/bin/activate
 
-**- Install dependencies:**
+**Install dependencies:**
 
 pip install -r requirements.txt
 
@@ -81,10 +81,10 @@ pip install 'git+[https://github.com/facebookresearch/detectron2.git](https://gi
 
 **3. Model Weights Setup**
 
-Do giới hạn kích thước tệp của GitHub, trọng số mô hình (model_final.pth) được lưu trữ bên ngoài.
+- Do giới hạn kích thước tệp của GitHub, trọng số mô hình (model_final.pth) được lưu trữ bên ngoài.
 
 
-Download Link: [Google Drive Link](https://drive.google.com/drive/folders/1TTVcZm9NxX8nwmYFx3JskfVWY6wWngoi?usp=drive_link)
+- Download Link: [Google Drive Link](https://drive.google.com/drive/folders/1TTVcZm9NxX8nwmYFx3JskfVWY6wWngoi?usp=drive_link)
 
 
-Placement: Tải xuống và di chuyển tệp vào thư mục output/.
+- Placement: Tải xuống và di chuyển tệp vào thư mục output/.
