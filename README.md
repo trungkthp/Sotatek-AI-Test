@@ -25,16 +25,21 @@ Sotatek-AI-Test/
 │
 ├── 🖥️ app.py                # Main Streamlit application (UI \& Logic)
 ├── 📁 output/               # Model weights and inference artifacts
-│   └── model\_final.pth      # Pre-trained Faster R-CNN weights
+## III. Project Structure
+
+```text
+Sotatek-AI-Test/
+├── 🖥️ app.py                # Main Streamlit application (UI & Logic)
+├── 📁 output/               # Model weights and inference artifacts
+│   └── model_final.pth      # Pre-trained Faster R-CNN weights
 ├── 📁 src/                  # Core processing modules
 │   ├── test.py              # Model validation script
-│   ├── final\_ocr.py         # Advanced OCR processing logic
+│   ├── final_ocr.py         # Advanced OCR processing logic
 │   └── train.py             # Training pipeline and configuration
 ├── 📁 dataset/              # Training/Validation data (Excluded from Git)
 ├── 📄 requirements.txt      # Python dependencies
 ├── 📄 .gitignore            # Excludes large binaries and cache files
-└── 📚 README.md             # Project documentation
-
+└── 📚 README.md             # Project documentation│   └── model\_final.pth      # Pre-trained Faster R-CNN weights
 **IV. Technology Stack**
 
 * AI/ML Frameworks: Detectron2 (Facebook Research), PyTorch, EasyOCR.
