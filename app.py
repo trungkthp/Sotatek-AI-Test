@@ -1,36 +1,13 @@
-import os
-import subprocess
-import sys
-import numpy as np
-import cv2
-import time
-
-# --- BƯỚC 1: ÉP CÀI ĐẶT TRỰC TIẾP TRONG CODE (CỨU CÁNH CHO CLOUD) ---
-def install_packages():
-    try:
-        from detectron2.engine import DefaultPredictor
-    except ImportError:
-        st.info("📦 First time setup: Installing AI engines (this may take 2-5 mins)...")
-        # Cài đặt Torch trước
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "torch", "torchvision", "--index-url", "https://download.pytorch.org/whl/cpu"])
-        # Cài đặt Detectron2 từ Wheel cho Python 3.10 (Phổ biến nhất trên Cloud)
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch2.1/detectron2-0.6%2Bcpu-cp310-cp310-linux_x86_64.whl"])
-        st.success("✅ Setup complete! Reloading...")
-        st.rerun()
-
 import streamlit as st
-
-# Gọi hàm cài đặt ngay đầu file
-install_packages()
-
-# Sau khi cài xong mới import các module của Detectron2
+import cv2
+import numpy as np
+import os
+import time
+# --- IMPORT TRỰC TIẾP (Vì Docker sẽ cài sẵn vào môi trường) ---
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 from detectron2 import model_zoo
 import easyocr
-
-# --- GIỮ NGUYÊN CÁC PHẦN CÒN LẠI CỦA BẠN TỪ ĐÂY TRỞ XUỐNG ---
-# st.set_page_config(...
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
@@ -48,25 +25,24 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. LOAD MODELS (Sửa lại đường dẫn PATH) ---
+# --- 2. LOAD MODELS ---
 @st.cache_resource
 def load_models():
-    # Lấy đường dẫn thư mục gốc của project
     base_path = os.path.dirname(os.path.abspath(__file__))
     
     cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"))
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 3
     
-    # ĐƯỜNG DẪN MỚI: Trỏ vào thư mục output/ đã sắp xếp
+    # Model trỏ vào thư mục output/
     model_path = os.path.join(base_path, "output", "model_final.pth")
     
     if not os.path.exists(model_path):
-        st.error(f"❌ Model not found at {model_path}. Please check your folder structure!")
+        st.error(f"❌ Model not found at {model_path}!")
         st.stop()
         
     cfg.MODEL.WEIGHTS = model_path
-    cfg.MODEL.DEVICE = "cpu" # Chuyển sang "cuda" nếu máy có GPU
+    cfg.MODEL.DEVICE = "cpu" 
     
     predictor = DefaultPredictor(cfg)
     reader = easyocr.Reader(['en'])
@@ -74,7 +50,6 @@ def load_models():
 
 # --- 3. SIDEBAR ---
 with st.sidebar:
-    # Thay logo bằng text hoặc ảnh local nếu link die
     st.title("🚀 Sotatek AI Test")
     st.subheader("Technical Drawing Analysis")
     st.markdown("---")
@@ -84,7 +59,6 @@ with st.sidebar:
     
     st.markdown("---")
     st.write("📌 **Project Information:**")
-    st.caption("- Model: Faster R-CNN (ResNet-101)")
     st.caption("- Framework: Detectron2 & EasyOCR")
     st.write("👤 Candidate: **Trung - AI Engineer**")
 
@@ -92,10 +66,8 @@ with st.sidebar:
 if uploaded_file is not None:
     predictor, reader = load_models()
     class_names = ["PartDrawing", "Note", "Table"]
-    # Màu sắc chuyên nghiệp (RGB)
     colors = {"PartDrawing": (255, 0, 0), "Note": (0, 150, 0), "Table": (0, 0, 255)}
 
-    # Đọc ảnh
     file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
     image = cv2.imdecode(file_bytes, 1)
     
@@ -114,14 +86,12 @@ if uploaded_file is not None:
             x1, y1, x2, y2 = map(int, boxes[i])
             label = class_names[classes[i]]
             
-            # Crop vùng ảnh để OCR
             crop = image[y1:y2, x1:x2]
-            # Tiền xử lý nhẹ cho OCR
             gray_crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
             ocr_res = reader.readtext(gray_crop, detail=0)
             ocr_text = " ".join(ocr_res)
             
-            # --- LABEL CORRECTION LOGIC (Phần ăn điểm của bạn) ---
+            # Logic sửa label dựa trên OCR
             if label == "Table" and len(ocr_res) < 4 and (x2-x1) < 400:
                 label = "Note"
                 
@@ -141,7 +111,6 @@ if uploaded_file is not None:
         for obj in final_objects:
             c = colors[obj['label']]
             cv2.rectangle(display_img, (obj['bbox'][0], obj['bbox'][1]), (obj['bbox'][2], obj['bbox'][3]), c, 2)
-            # Vẽ label đẹp hơn
             cv2.putText(display_img, f"{obj['label']}", (obj['bbox'][0], obj['bbox'][1]-10), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, c, 2)
         
@@ -149,21 +118,14 @@ if uploaded_file is not None:
 
     with col_right:
         st.subheader("📊 Extraction Results")
-        
         tab1, tab2 = st.tabs(["📑 OCR Details", "💻 JSON Output"])
         
         with tab1:
-            if not final_objects:
-                st.warning("No objects detected with current threshold.")
             for idx, obj in enumerate(final_objects):
                 with st.expander(f"Object #{idx+1}: {obj['label']} (Conf: {obj['score']:.2f})"):
-                    st.write("**Text Content:**")
-                    st.info(obj['ocr'] if obj['ocr'].strip() else "Empty text / Handwriting")
+                    st.info(obj['ocr'] if obj['ocr'].strip() else "Empty text")
         
         with tab2:
             st.json({"file": uploaded_file.name, "count": len(final_objects), "data": final_objects})
-
 else:
-    # Màn hình chờ
-    st.info("### 👈 Please upload a technical drawing (JPG/PNG) to begin.")
-    st.image("https://img.freepik.com/free-vector/blueprint-architecture-concept_23-2147772322.jpg", width=700)
+    st.info("### 👈 Please upload a technical drawing to begin.")
