@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: ai-test-sotatek
-    env: docker
-    plan: free
-    region: singapore
-    envVars:
-      - key: PYTHONUNBUFFERED
-        value: "1"
