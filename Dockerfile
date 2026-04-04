@@ -9,15 +9,15 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH "${PYTHONPATH}:/usr/local/lib/python3.10/site-packages"
 
 # 1. Cài đặt thư viện hệ thống cực kỳ đầy đủ
+# 1. Cài đặt thư viện hệ thống (Sửa lỗi libgl1-mesa-glx)
 RUN apt-get update && apt-get install -y \
     build-essential \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     git \
     wget \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
 # 2. Nâng cấp pip và cài đặt Torch bản CPU trước
