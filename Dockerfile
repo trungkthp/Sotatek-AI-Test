@@ -1,38 +1,36 @@
-# Sử dụng Python 3.11 vì nó ổn định nhất cho Detectron2 hiện tại
+# 1. Dùng Python 3.11 bản Slim cho nhẹ nhưng vẫn đủ công cụ
 FROM python:3.11-slim
 
-# Tránh các câu hỏi tương tác khi cài apt
+# 2. Thiết lập biến môi trường để cài đặt không bị hỏi (Non-interactive)
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PYTHONUNBUFFERED=1
 
-# 1. Cài đặt các thư viện hệ thống (Cực kỳ quan trọng cho OpenCV và Detectron2)
+# 3. Cài đặt các thư viện hệ thống CẦN THIẾT (Không được thiếu cái nào)
 RUN apt-get update && apt-get install -y \
     build-essential \
     libgl1-mesa-glx \
     libglib2.0-0 \
     git \
-    python3-dev \
     wget \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Thiết lập thư mục làm việc
 WORKDIR /app
 
-# 3. Nâng cấp pip và cài đặt các thư viện cơ bản trước
-RUN pip install --no-cache-dir --upgrade pip
+# 4. Nâng cấp pip và cài đặt Torch/Torchvision TRƯỚC (Bắt buộc có trước Detectron2)
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
-# 4. Copy file requirements và cài đặt (Tách riêng để tận dụng Docker Cache)
+# 5. ÉP CÀI Detectron2 bằng link trực tiếp (Bản CPU dành cho Linux Python 3.11)
+# Cách này bỏ qua việc tìm kiếm trên PyPI, tải thẳng file chuẩn về cài
+RUN pip install --no-cache-dir https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch2.1/detectron2-0.6%2Bcpu-cp311-cp311-linux_x86_64.whl
+
+# 6. Cài đặt các requirements còn lại (Bỏ detectron2 khỏi file txt nhé)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. Lệnh "ép" cài Detectron2 từ GitHub (Do Docker có tài nguyên riêng nên không lo tràn RAM như Cloud)
-RUN pip install 'git+https://github.com/facebookresearch/detectron2.git'
-
-# 6. Copy toàn bộ mã nguồn vào Container
+# 7. Copy code và chạy app
 COPY . .
 
-# 7. Mở cổng 8501 cho Streamlit
 EXPOSE 8501
 
-# 8. Lệnh khởi chạy app
 CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
