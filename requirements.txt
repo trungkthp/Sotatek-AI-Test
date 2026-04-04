@@ -6,5 +6,5 @@ pandas
 torch
 torchvision
 typing-extensions>=4.12
---find-links https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch2.1/index.html
-detectron2
+# Cài detectron2 trực tiếp từ đường dẫn GitHub (Cách này dành cho Cloud)
+detectron2 @ git+https://github.com/facebookresearch/detectron2.git
