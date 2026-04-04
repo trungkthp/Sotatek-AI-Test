@@ -2,52 +2,53 @@ import streamlit as st
 import cv2
 import numpy as np
 import os
-import subprocess
-import sys
+import time
+from detectron2.engine import DefaultPredictor
+from detectron2.config import get_cfg
+from detectron2 import model_zoo
+import easyocr
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
     page_title="Sotatek AI Drawing Dashboard", 
-    layout="wide"
+    layout="wide", 
+    initial_sidebar_state="expanded"
 )
 
-# --- 2. HÀM CÀI ĐẶT & LOAD MODEL ---
+# Tùy chỉnh giao diện bằng CSS
+st.markdown("""
+    <style>
+    .main { background-color: #f8f9fa; }
+    .stAlert { border-radius: 10px; }
+    .st-expander { border: 1px solid #e0e0e0; border-radius: 5px; }
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- 2. LOAD MODELS ---
 @st.cache_resource
 def load_models():
-    # Kiểm tra và cài đặt Detectron2 nếu chưa có (Lazy Install)
-    try:
-        from detectron2.engine import DefaultPredictor
-        from detectron2.config import get_cfg
-        from detectron2 import model_zoo
-    except ImportError:
-        st.warning("🛠️ Cấu hình môi trường AI lần đầu (khoảng 2-3 phút)...")
-        # Cài đặt bản build sẵn để cực nhanh và không tốn RAM
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "torch", "torchvision", "--index-url", "https://download.pytorch.org/whl/cpu"])
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch2.1/detectron2-0.6%2Bcpu-cp310-cp310-linux_x86_64.whl"])
-        st.success("✅ Đã cài đặt xong! Đang khởi động lại...")
-        st.rerun()
-
+    # Lấy đường dẫn thư mục gốc
     base_path = os.path.dirname(os.path.abspath(__file__))
-    cfg = get_cfg()
-    cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"))
-    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 3
     
+    cfg = get_cfg()
+    # Sử dụng cấu hình Faster R-CNN tương ứng với model đã train
+    cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"))
+    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 3  # PartDrawing, Note, Table
+    
+    # Đường dẫn trỏ vào file weight trong thư mục output/
     model_path = os.path.join(base_path, "output", "model_final.pth")
+    
     if not os.path.exists(model_path):
-        st.error(f"❌ Không tìm thấy file model tại: {model_path}")
+        st.error(f"❌ Không tìm thấy file Model tại: {model_path}")
         st.stop()
         
     cfg.MODEL.WEIGHTS = model_path
-    cfg.MODEL.DEVICE = "cpu" 
+    cfg.MODEL.DEVICE = "cpu" # Ép chạy CPU trên Streamlit Cloud
     
     predictor = DefaultPredictor(cfg)
-    # Import EasyOCR ở đây luôn
-    import easyocr
+    # Khởi tạo EasyOCR cho tiếng Anh
     reader = easyocr.Reader(['en'])
     return predictor, reader
-
-# --- 3. TIẾP TỤC LOGIC CỦA TRUNG ---
-# ... (Phần Sidebar và xử lý ảnh giữ nguyên)
 
 # --- 3. SIDEBAR ---
 with st.sidebar:
@@ -65,14 +66,17 @@ with st.sidebar:
 
 # --- 4. XỬ LÝ CHÍNH ---
 if uploaded_file is not None:
+    # Gọi hàm load model (sẽ dùng cache sau lần đầu)
     predictor, reader = load_models()
+    
     class_names = ["PartDrawing", "Note", "Table"]
     colors = {"PartDrawing": (255, 0, 0), "Note": (0, 150, 0), "Table": (0, 0, 255)}
 
+    # Đọc ảnh từ file upload
     file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
     image = cv2.imdecode(file_bytes, 1)
     
-    with st.spinner('🔍 AI is analyzing the drawing structure...'):
+    with st.spinner('🔍 AI đang phân tích cấu trúc bản vẽ...'):
         outputs = predictor(image)
         instances = outputs["instances"].to("cpu")
         
@@ -87,12 +91,15 @@ if uploaded_file is not None:
             x1, y1, x2, y2 = map(int, boxes[i])
             label = class_names[classes[i]]
             
+            # Crop vùng đối tượng để OCR
             crop = image[y1:y2, x1:x2]
+            if crop.size == 0: continue
+            
             gray_crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
             ocr_res = reader.readtext(gray_crop, detail=0)
             ocr_text = " ".join(ocr_res)
             
-            # Logic sửa label dựa trên OCR
+            # --- LOGIC SỬA LABEL (Dựa trên kết quả OCR) ---
             if label == "Table" and len(ocr_res) < 4 and (x2-x1) < 400:
                 label = "Note"
                 
@@ -122,11 +129,15 @@ if uploaded_file is not None:
         tab1, tab2 = st.tabs(["📑 OCR Details", "💻 JSON Output"])
         
         with tab1:
+            if not final_objects:
+                st.warning("Không tìm thấy đối tượng nào với ngưỡng Confidence hiện tại.")
             for idx, obj in enumerate(final_objects):
-                with st.expander(f"Object #{idx+1}: {obj['label']} (Conf: {obj['score']:.2f})"):
-                    st.info(obj['ocr'] if obj['ocr'].strip() else "Empty text")
+                with st.expander(f"Object #{idx+1}: {obj['label']} ({obj['score']:.2f})"):
+                    st.write("**Nội dung OCR:**")
+                    st.info(obj['ocr'] if obj['ocr'].strip() else "Không nhận diện được chữ")
         
         with tab2:
             st.json({"file": uploaded_file.name, "count": len(final_objects), "data": final_objects})
+
 else:
-    st.info("### 👈 Please upload a technical drawing to begin.")
+    st.info("### 👈 Vui lòng tải lên bản vẽ kỹ thuật (JPG/PNG) để bắt đầu.")
