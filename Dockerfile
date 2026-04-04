@@ -1,31 +1,26 @@
-# 1. Dùng bản Python có sẵn công cụ biên dịch
-FROM python:3.10-slim
+# Đổi từ python-slim sang ubuntu cho ổn định
+FROM ubuntu:22.04
 
-# 2. Cài đặt thư viện hệ thống cần thiết cho OpenCV và Detectron2
+# Tránh các câu hỏi tương tác khi cài đặt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Cài đặt Python và các thư viện hệ thống
 RUN apt-get update && apt-get install -y \
+    python3.10 \
+    python3-pip \
+    python3-dev \
     build-essential \
     libgl1-mesa-glx \
     libglib2.0-0 \
     git \
-    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. Tạo thư mục làm việc
 WORKDIR /app
-
-# 4. Copy và cài đặt Requirements (Cài Torch trước)
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
-
-# 5. Cài Detectron2 cưỡng chế
-RUN pip install 'git+https://github.com/facebookresearch/detectron2.git'
-
-# 6. Copy toàn bộ code vào
 COPY . .
 
-# 7. Mở cổng cho Streamlit
-EXPOSE 8501
+# Cài đặt thư viện Python
+RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install 'git+https://github.com/facebookresearch/detectron2.git'
 
-# 8. Lệnh chạy app
+EXPOSE 8501
 CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
