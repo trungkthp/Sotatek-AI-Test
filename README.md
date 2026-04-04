@@ -83,3 +83,6 @@ pip install 'git+https://github.com/facebookresearch/detectron2.git' --break-sys
 
 
 - Placement: Tải xuống và di chuyển tệp vào thư mục output/.
+
+
+- Video demo: [Google Drive Link](https://drive.google.com/drive/folders/1ih0puYGGoL2Gq8VD1jZR8IB1Dojy2RJ8?usp=drive_link)
