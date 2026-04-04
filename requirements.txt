@@ -6,3 +6,5 @@ pandas
 torch
 torchvision
 typing-extensions>=4.12
+--find-links https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch2.1/index.html
+detectron2
