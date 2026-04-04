@@ -79,10 +79,12 @@ pip install 'git+https://github.com/facebookresearch/detectron2.git' --break-sys
 - Do giới hạn kích thước tệp của GitHub, trọng số mô hình (model_final.pth) được lưu trữ bên ngoài.
 
 
-- Download Link: [Google Drive Link](https://drive.google.com/drive/folders/1TTVcZm9NxX8nwmYFx3JskfVWY6wWngoi?usp=drive_link)
+- Download Link: [Google Drive Link](https://drive.google.com/file/d/1voIzijFduwDECvD2OW_OUr4WONvWz9tW/view?usp=sharing)
 
 
 - Placement: Tải xuống và di chuyển tệp vào thư mục output/.
 
+**4. Web Demo**
 
-- Video demo: [Google Drive Link](https://drive.google.com/drive/folders/1ih0puYGGoL2Gq8VD1jZR8IB1Dojy2RJ8?usp=drive_link)
+
+- Web demo: https://huggingface.co/spaces/trungkthp/sotatek-ai-test
