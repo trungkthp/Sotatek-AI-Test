@@ -65,18 +65,18 @@ Sotatek-AI-Test/
 
 
 **Clone the repository:**
-
+```
 Bash
 git clone https://github.com/trungkthp/Sotatek-AI-Test.git
 cd Sotatek-AI-Test
-
+```
 
 **Install dependencies:**
-
+```
 Bash
 pip install -r requirements.txt --break-system-packages
 pip install 'git+https://github.com/facebookresearch/detectron2.git' --break-system-packages
-
+```
 **3. Model Weights Setup**
 
 - Do giới hạn kích thước tệp của GitHub, trọng số mô hình (model_final.pth) được lưu trữ bên ngoài.
