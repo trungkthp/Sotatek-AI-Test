@@ -3,6 +3,4 @@ opencv-python-headless
 easyocr
 numpy<2.0.0
 pandas
-torch
-torchvision
 typing-extensions>=4.12
