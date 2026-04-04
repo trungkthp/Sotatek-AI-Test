@@ -2,149 +2,84 @@ import streamlit as st
 import cv2
 import numpy as np
 import os
-import time
+import gc
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 from detectron2 import model_zoo
 import easyocr
 
-# --- IMPORT MODULE TỪ THƯ MỤC SRC ---
-# Nếu bạn có logic OCR phức tạp trong final_ocr.py, hãy import nó ở đây
-# from src import final_ocr 
+# --- CẤU HÌNH GIAO DIỆN ---
+st.set_page_config(page_title="Sotatek AI Test", layout="wide")
+st.title("🚀 Technical Drawing Analysis")
 
-# --- 1. CẤU HÌNH TRANG ---
-st.set_page_config(
-    page_title="Sotatek AI Drawing Dashboard", 
-    layout="wide", 
-    initial_sidebar_state="expanded"
-)
-
-# CSS để Dashboard nhìn "sang" hơn
-st.markdown("""
-    <style>
-    .main { background-color: #f8f9fa; }
-    .stAlert { border-radius: 10px; }
-    .st-expander { border: 1px solid #e0e0e0; border-radius: 5px; }
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- 2. LOAD MODELS (Đã sửa đường dẫn để khớp với GitHub) ---
+# --- HÀM LOAD MODEL DETECTRON2 (CHỈ LOAD 1 LẦN) ---
 @st.cache_resource
-def load_models():
+def get_predictor():
     base_path = os.path.dirname(os.path.abspath(__file__))
+    # Tự động tìm model dù ở gốc hay trong output/
+    p1 = os.path.join(base_path, "model_final.pth")
+    p2 = os.path.join(base_path, "output", "model_final.pth")
+    model_path = p1 if os.path.exists(p1) else p2
+    
+    if not os.path.exists(model_path):
+        st.error(f"❌ Không tìm thấy model tại {p1} hoặc {p2}")
+        st.stop()
+
     cfg = get_cfg()
+    # Dùng ResNet-50 để nhẹ RAM hơn ResNet-101
     cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"))
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 3
-    
-    # Cách kiểm tra linh hoạt:
-    path_in_output = os.path.join(base_path, "output", "model_final.pth")
-    path_in_root = os.path.join(base_path, "model_final.pth")
-    
-    if os.path.exists(path_in_output):
-        model_path = path_in_output
-    elif os.path.exists(path_in_root):
-        model_path = path_in_root
-    else:
-        st.error(f"❌ Không tìm thấy model tại {path_in_output} hoặc {path_in_root}")
-        st.stop()
-        
     cfg.MODEL.WEIGHTS = model_path
-    cfg.MODEL.DEVICE = "cpu" 
+    cfg.MODEL.DEVICE = "cpu"
+    # Giới hạn số lượng proposal để giảm tải tính toán
+    cfg.MODEL.RPN.POST_NMS_TOPK_TEST = 300 
     
-    return DefaultPredictor(cfg), easyocr.Reader(['en'])
+    return DefaultPredictor(cfg)
 
-# --- 3. SIDEBAR ---
-with st.sidebar:
-    # Thay logo bằng text hoặc ảnh local nếu link die
-    st.title("🚀 Sotatek AI Test")
-    st.subheader("Technical Drawing Analysis")
-    st.markdown("---")
+# --- GIAO DIỆN UPLOAD ---
+uploaded_file = st.file_uploader("Upload bản vẽ kỹ thuật", type=["jpg", "png", "jpeg"])
+
+if uploaded_file:
+    # 1. Khởi tạo Predictor (Lần đầu sẽ hơi lâu)
+    predictor = get_predictor()
     
-    uploaded_file = st.file_uploader("📤 Upload Engineering Drawing", type=["jpg", "png", "jpeg"])
-    conf_threshold = st.slider("Confidence Threshold", 0.0, 1.0, 0.50)
-    
-    st.markdown("---")
-    st.write("📌 **Project Information:**")
-    st.caption("- Model: Faster R-CNN (ResNet-101)")
-    st.caption("- Framework: Detectron2 & EasyOCR")
-    st.write("👤 Candidate: **Trung - AI Engineer**")
-
-# --- 4. XỬ LÝ CHÍNH ---
-if uploaded_file is not None:
-    predictor, reader = load_models()
-    class_names = ["PartDrawing", "Note", "Table"]
-    # Màu sắc chuyên nghiệp (RGB)
-    colors = {"PartDrawing": (255, 0, 0), "Note": (0, 150, 0), "Table": (0, 0, 255)}
-
-    # Đọc ảnh
+    # 2. Đọc ảnh từ file upload
     file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
     image = cv2.imdecode(file_bytes, 1)
     
-    with st.spinner('🔍 AI is analyzing the drawing structure...'):
+    with st.spinner('AI đang phân tích đối tượng...'):
+        # 3. Chạy Detection
         outputs = predictor(image)
         instances = outputs["instances"].to("cpu")
-        
         boxes = instances.pred_boxes.tensor.numpy()
-        scores = instances.scores.numpy()
         classes = instances.pred_classes.numpy()
+        scores = instances.scores.numpy()
         
-        final_objects = []
-        for i in range(len(instances)):
-            if scores[i] < conf_threshold: continue
+        # 4. Chỉ load EasyOCR SAU KHI detect xong để tiết kiệm RAM
+        # Điều này giúp tránh việc 2 model nặng cùng nằm trên RAM một lúc
+        with st.spinner('Đang nhận diện chữ viết (OCR)...'):
+            reader = easyocr.Reader(['en'], gpu=False)
             
-            x1, y1, x2, y2 = map(int, boxes[i])
-            label = class_names[classes[i]]
-            
-            # Crop vùng ảnh để OCR
-            crop = image[y1:y2, x1:x2]
-            # Tiền xử lý nhẹ cho OCR
-            gray_crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-            ocr_res = reader.readtext(gray_crop, detail=0)
-            ocr_text = " ".join(ocr_res)
-            
-            # --- LABEL CORRECTION LOGIC (Phần ăn điểm của bạn) ---
-            if label == "Table" and len(ocr_res) < 4 and (x2-x1) < 400:
-                label = "Note"
-                
-            final_objects.append({
-                "label": label, 
-                "score": float(scores[i]), 
-                "bbox": [x1, y1, x2, y2], 
-                "ocr": ocr_text
-            })
+            # --- LOGIC XỬ LÝ KẾT QUẢ (Vẽ và OCR) ---
+            for i, box in enumerate(boxes):
+                if scores[i] > 0.5: # Confidence threshold
+                    x1, y1, x2, y2 = map(int, box)
+                    
+                    # Cắt vùng ảnh để OCR
+                    roi = image[y1:y2, x1:x2]
+                    if roi.size > 0:
+                        results = reader.readtext(roi)
+                        text = results[0][1] if results else ""
+                        
+                        # Vẽ lên ảnh chính
+                        cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                        cv2.putText(image, text, (x1, y1-10), 
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
-    # --- 5. HIỂN THỊ KẾT QUẢ ---
-    col_left, col_right = st.columns([1.5, 1])
-
-    with col_left:
-        st.subheader("🖼 Detected Entities")
-        display_img = image.copy()
-        for obj in final_objects:
-            c = colors[obj['label']]
-            cv2.rectangle(display_img, (obj['bbox'][0], obj['bbox'][1]), (obj['bbox'][2], obj['bbox'][3]), c, 2)
-            # Vẽ label đẹp hơn
-            cv2.putText(display_img, f"{obj['label']}", (obj['bbox'][0], obj['bbox'][1]-10), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, c, 2)
+        # 5. Hiển thị kết quả
+        st.image(image, channels="BGR", use_container_width=True)
+        st.success(f"Phân tích thành công {len(boxes)} đối tượng!")
         
-        st.image(display_img, channels="BGR", use_container_width=True)
-
-    with col_right:
-        st.subheader("📊 Extraction Results")
-        
-        tab1, tab2 = st.tabs(["📑 OCR Details", "💻 JSON Output"])
-        
-        with tab1:
-            if not final_objects:
-                st.warning("No objects detected with current threshold.")
-            for idx, obj in enumerate(final_objects):
-                with st.expander(f"Object #{idx+1}: {obj['label']} (Conf: {obj['score']:.2f})"):
-                    st.write("**Text Content:**")
-                    st.info(obj['ocr'] if obj['ocr'].strip() else "Empty text / Handwriting")
-        
-        with tab2:
-            st.json({"file": uploaded_file.name, "count": len(final_objects), "data": final_objects})
-
-else:
-    # Màn hình chờ
-    st.info("### 👈 Please upload a technical drawing (JPG/PNG) to begin.")
-    st.image("https://img.freepik.com/free-vector/blueprint-architecture-concept_23-2147772322.jpg", width=700)
+        # Dọn dẹp bộ nhớ tạm
+        del outputs
+        gc.collect()
