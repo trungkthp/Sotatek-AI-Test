@@ -67,17 +67,12 @@ git clone [https://github.com/trungkthp/Sotatek-AI-Test.git](https://github.com/
 
 cd Sotatek-AI-Test
 
-**Set up virtual environment:**
-
-python3 -m venv venv
-
-source venv/bin/activate
 
 **Install dependencies:**
 
-pip install -r requirements.txt
+pip install -r requirements.txt --break-system-packages
 
-pip install 'git+[https://github.com/facebookresearch/detectron2.git](https://github.com/facebookresearch/detectron2.git)'
+pip install 'git+https://github.com/facebookresearch/detectron2.git' --break-system-packages
 
 **3. Model Weights Setup**
 
