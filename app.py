@@ -2,51 +2,52 @@ import streamlit as st
 import cv2
 import numpy as np
 import os
-import time
-# --- IMPORT TRỰC TIẾP (Vì Docker sẽ cài sẵn vào môi trường) ---
-from detectron2.engine import DefaultPredictor
-from detectron2.config import get_cfg
-from detectron2 import model_zoo
-import easyocr
+import subprocess
+import sys
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
     page_title="Sotatek AI Drawing Dashboard", 
-    layout="wide", 
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
-# CSS để Dashboard nhìn "sang" hơn
-st.markdown("""
-    <style>
-    .main { background-color: #f8f9fa; }
-    .stAlert { border-radius: 10px; }
-    .st-expander { border: 1px solid #e0e0e0; border-radius: 5px; }
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- 2. LOAD MODELS ---
+# --- 2. HÀM CÀI ĐẶT & LOAD MODEL ---
 @st.cache_resource
 def load_models():
+    # Kiểm tra và cài đặt Detectron2 nếu chưa có (Lazy Install)
+    try:
+        from detectron2.engine import DefaultPredictor
+        from detectron2.config import get_cfg
+        from detectron2 import model_zoo
+    except ImportError:
+        st.warning("🛠️ Cấu hình môi trường AI lần đầu (khoảng 2-3 phút)...")
+        # Cài đặt bản build sẵn để cực nhanh và không tốn RAM
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "torch", "torchvision", "--index-url", "https://download.pytorch.org/whl/cpu"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch2.1/detectron2-0.6%2Bcpu-cp310-cp310-linux_x86_64.whl"])
+        st.success("✅ Đã cài đặt xong! Đang khởi động lại...")
+        st.rerun()
+
     base_path = os.path.dirname(os.path.abspath(__file__))
-    
     cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"))
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 3
     
-    # Model trỏ vào thư mục output/
     model_path = os.path.join(base_path, "output", "model_final.pth")
-    
     if not os.path.exists(model_path):
-        st.error(f"❌ Model not found at {model_path}!")
+        st.error(f"❌ Không tìm thấy file model tại: {model_path}")
         st.stop()
         
     cfg.MODEL.WEIGHTS = model_path
     cfg.MODEL.DEVICE = "cpu" 
     
     predictor = DefaultPredictor(cfg)
+    # Import EasyOCR ở đây luôn
+    import easyocr
     reader = easyocr.Reader(['en'])
     return predictor, reader
+
+# --- 3. TIẾP TỤC LOGIC CỦA TRUNG ---
+# ... (Phần Sidebar và xử lý ảnh giữ nguyên)
 
 # --- 3. SIDEBAR ---
 with st.sidebar:
