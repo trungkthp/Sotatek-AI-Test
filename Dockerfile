@@ -1,7 +1,7 @@
-# Sử dụng Python 3.10 để đảm bảo tương thích tốt nhất
-FROM python:3.10-slim
+# Sử dụng đúng bản 3.12.3 slim để nhẹ và đồng bộ với máy Trung
+FROM python:3.12.3-slim
 
-# Cài đặt các thư viện hệ thống cần thiết
+# Cài đặt các công cụ biên dịch (Cần thiết vì 3.12 phải build Detectron2 từ đầu)
 RUN apt-get update && apt-get install -y \
     build-essential \
     libgl1 \
@@ -12,17 +12,20 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Bước 1: Cài đặt Torch và torchvision bản CPU trước
-RUN pip install --no-cache-dir torch==2.1.0 torchvision==0.16.0 --index-url https://download.pytorch.org/whl/cpu
+# In ra version để kiểm tra chắc chắn trong Log Render
+RUN python --version
 
-# Bước 2: ÉP CÀI Detectron2 trực tiếp từ GitHub bằng cách build tại chỗ
-# Lệnh này sẽ tự động tải source và build để khớp hoàn toàn với môi trường Docker hiện tại
-RUN pip install --no-cache-dir 'git+https://github.com/facebookresearch/detectron2.git'
+# 1. Cài đặt Torch & torchvision (Bản cho CPU)
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu --break-system-packages
 
-# Bước 3: Cài đặt các thư viện còn lại từ requirements.txt
+# 2. Cài đặt Detectron2 từ GitHub (Sẽ mất khoảng 5-10 phút để biên dịch)
+RUN pip install --no-cache-dir 'git+https://github.com/facebookresearch/detectron2.git' --break-system-packages
+
+# 3. Cài đặt các thư viện từ requirements.txt
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt --break-system-packages
 
+# 4. Copy toàn bộ code vào
 COPY . .
 
 EXPOSE 8501
