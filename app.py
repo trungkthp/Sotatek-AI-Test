@@ -1,16 +1,36 @@
-import streamlit as st
-import cv2
-import numpy as np
 import os
+import subprocess
+import sys
+import numpy as np
+import cv2
 import time
+
+# --- BƯỚC 1: ÉP CÀI ĐẶT TRỰC TIẾP TRONG CODE (CỨU CÁNH CHO CLOUD) ---
+def install_packages():
+    try:
+        from detectron2.engine import DefaultPredictor
+    except ImportError:
+        st.info("📦 First time setup: Installing AI engines (this may take 2-5 mins)...")
+        # Cài đặt Torch trước
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "torch", "torchvision", "--index-url", "https://download.pytorch.org/whl/cpu"])
+        # Cài đặt Detectron2 từ Wheel cho Python 3.10 (Phổ biến nhất trên Cloud)
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch2.1/detectron2-0.6%2Bcpu-cp310-cp310-linux_x86_64.whl"])
+        st.success("✅ Setup complete! Reloading...")
+        st.rerun()
+
+import streamlit as st
+
+# Gọi hàm cài đặt ngay đầu file
+install_packages()
+
+# Sau khi cài xong mới import các module của Detectron2
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 from detectron2 import model_zoo
 import easyocr
 
-# --- IMPORT MODULE TỪ THƯ MỤC SRC ---
-# Nếu bạn có logic OCR phức tạp trong final_ocr.py, hãy import nó ở đây
-# from src import final_ocr 
+# --- GIỮ NGUYÊN CÁC PHẦN CÒN LẠI CỦA BẠN TỪ ĐÂY TRỞ XUỐNG ---
+# st.set_page_config(...
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
