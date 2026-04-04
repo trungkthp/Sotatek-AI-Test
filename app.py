@@ -3,10 +3,6 @@ import cv2
 import numpy as np
 import os
 import time
-from detectron2.engine import DefaultPredictor
-from detectron2.config import get_cfg
-from detectron2 import model_zoo
-import easyocr
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
@@ -15,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS để giao diện chuyên nghiệp hơn
+# Giao diện tùy chỉnh cho chuyên nghiệp
 st.markdown("""
     <style>
     .main { background-color: #f8f9fa; }
@@ -24,56 +20,60 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. TẢI MÔ HÌNH (Sử dụng Cache để tối ưu RAM) ---
+# --- 2. HÀM LOAD MODELS (Dùng Cache để tránh tràn RAM) ---
 @st.cache_resource
 def load_models():
-    # Lấy đường dẫn thư mục gốc của project
+    # Import bên trong hàm để tránh lỗi khởi động nếu môi trường chưa sẵn sàng
+    from detectron2.engine import DefaultPredictor
+    from detectron2.config import get_cfg
+    from detectron2 import model_zoo
+    import easyocr
+
     base_path = os.path.dirname(os.path.abspath(__file__))
     
     cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"))
-    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 3 # PartDrawing, Note, Table
+    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 3  # PartDrawing, Note, Table
     
-    # Trỏ vào file weight trong thư mục output/
+    # Đảm bảo file model_final.pth nằm trong thư mục output/ trên GitHub của bạn
     model_path = os.path.join(base_path, "output", "model_final.pth")
     
     if not os.path.exists(model_path):
-        st.error(f"❌ Không tìm thấy Model tại: {model_path}. Vui lòng kiểm tra cấu trúc thư mục!")
+        st.error(f"❌ Không tìm thấy Model tại: {model_path}")
         st.stop()
         
     cfg.MODEL.WEIGHTS = model_path
-    cfg.MODEL.DEVICE = "cpu" # Ép chạy CPU để phù hợp với Streamlit Cloud
+    cfg.MODEL.DEVICE = "cpu" # Ép chạy CPU cho môi trường Cloud miễn phí
     
     predictor = DefaultPredictor(cfg)
     reader = easyocr.Reader(['en'])
     return predictor, reader
 
-# --- 3. THANH SIDEBAR ---
+# --- 3. GIAO DIỆN SIDEBAR ---
 with st.sidebar:
     st.title("🚀 Sotatek AI Test")
     st.subheader("Technical Drawing Analysis")
     st.markdown("---")
     
-    uploaded_file = st.file_uploader("📤 Tải lên bản vẽ kỹ thuật", type=["jpg", "png", "jpeg"])
+    uploaded_file = st.file_uploader("📤 Tải lên bản vẽ (JPG/PNG)", type=["jpg", "png", "jpeg"])
     conf_threshold = st.slider("Ngưỡng tin cậy (Confidence)", 0.0, 1.0, 0.50)
     
     st.markdown("---")
     st.write("📌 **Thông tin dự án:**")
-    st.caption("- Model: Faster R-CNN (ResNet-50)")
     st.caption("- Framework: Detectron2 & EasyOCR")
     st.write("👤 Ứng viên: **Trung - AI Engineer**")
 
-# --- 4. XỬ LÝ CHÍNH ---
+# --- 4. XỬ LÝ CHÍNH KHI CÓ ẢNH ---
 if uploaded_file is not None:
     predictor, reader = load_models()
     class_names = ["PartDrawing", "Note", "Table"]
     colors = {"PartDrawing": (255, 0, 0), "Note": (0, 150, 0), "Table": (0, 0, 255)}
 
-    # Chuyển đổi file upload sang định dạng OpenCV
+    # Đọc ảnh từ bộ nhớ đệm
     file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
     image = cv2.imdecode(file_bytes, 1)
     
-    with st.spinner('🔍 AI đang phân tích cấu trúc bản vẽ...'):
+    with st.spinner('🔍 AI đang phân tích...'):
         outputs = predictor(image)
         instances = outputs["instances"].to("cpu")
         
@@ -88,15 +88,16 @@ if uploaded_file is not None:
             x1, y1, x2, y2 = map(int, boxes[i])
             label = class_names[classes[i]]
             
-            # Cắt vùng ảnh đối tượng để chạy OCR
+            # Cắt vùng ảnh để chạy OCR
             crop = image[y1:y2, x1:x2]
             if crop.size == 0: continue
             
+            # OCR trích xuất nội dung chữ
             gray_crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
             ocr_res = reader.readtext(gray_crop, detail=0)
             ocr_text = " ".join(ocr_res)
             
-            # --- LOGIC SỬA NHÃN (Phần quan trọng để đạt điểm cao) ---
+            # --- LOGIC SỬA NHÃN (Tăng độ chính xác thực tế) ---
             if label == "Table" and len(ocr_res) < 4 and (x2-x1) < 400:
                 label = "Note"
                 
@@ -111,7 +112,7 @@ if uploaded_file is not None:
     col_left, col_right = st.columns([1.5, 1])
 
     with col_left:
-        st.subheader("🖼 Đối tượng đã nhận diện")
+        st.subheader("🖼 Bản vẽ đã nhận diện")
         display_img = image.copy()
         for obj in final_objects:
             c = colors[obj['label']]
@@ -122,22 +123,17 @@ if uploaded_file is not None:
         st.image(display_img, channels="BGR", use_container_width=True)
 
     with col_right:
-        st.subheader("📊 Dữ liệu trích xuất")
-        
-        tab1, tab2 = st.tabs(["📑 Chi tiết OCR", "💻 JSON Output"])
+        st.subheader("📊 Kết quả trích xuất")
+        tab1, tab2 = st.tabs(["📑 Chi tiết OCR", "💻 Dữ liệu JSON"])
         
         with tab1:
             if not final_objects:
-                st.warning("Không tìm thấy đối tượng nào với ngưỡng hiện tại.")
+                st.warning("Không tìm thấy đối tượng nào.")
             for idx, obj in enumerate(final_objects):
-                with st.expander(f"Đối tượng #{idx+1}: {obj['label']} (Conf: {obj['score']:.2f})"):
-                    st.write("**Nội dung văn bản:**")
-                    st.info(obj['ocr'] if obj['ocr'].strip() else "Không nhận diện được chữ hoặc chữ viết tay")
+                with st.expander(f"Đối tượng #{idx+1}: {obj['label']} ({obj['score']:.2f})"):
+                    st.info(obj['ocr'] if obj['ocr'].strip() else "Trống")
         
         with tab2:
-            # Hiển thị JSON để nhà tuyển dụng kiểm tra cấu trúc dữ liệu
             st.json({"file": uploaded_file.name, "count": len(final_objects), "data": final_objects})
-
 else:
-    # Màn hình chờ khi chưa tải ảnh
-    st.info("### 👈 Vui lòng tải lên bản vẽ kỹ thuật (JPG/PNG) để bắt đầu.")
+    st.info("### 👈 Vui lòng tải lên bản vẽ để bắt đầu phân tích.")
