@@ -1,8 +1,8 @@
 streamlit
 opencv-python-headless
 easyocr
-numpy
+numpy<2.0.0
 pandas
-torch
-torchvision
-typing-extensions>=4.12
+torch==2.1.0
+torchvision==0.16.0
+https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch2.1/detectron2-0.6%2Bcpu-cp310-cp310-linux_x86_64.whl
