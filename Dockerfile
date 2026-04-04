@@ -1,10 +1,14 @@
-# 1. Dùng Python 3.11 bản Slim cho nhẹ nhưng vẫn đủ công cụ
-FROM python:3.11-slim
+# Sử dụng Python 3.10-slim để khớp với bản Wheel ổn định nhất của Detectron2
+FROM python:3.10-slim
 
-# 2. Thiết lập biến môi trường để cài đặt không bị hỏi (Non-interactive)
+# Chống lag và các câu hỏi xác nhận
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+# ÉP đường dẫn thư viện để Python luôn thấy Detectron2
+ENV PYTHONPATH "${PYTHONPATH}:/usr/local/lib/python3.10/site-packages"
 
-# 3. Cài đặt các thư viện hệ thống CẦN THIẾT (Không được thiếu cái nào)
+# 1. Cài đặt thư viện hệ thống cực kỳ đầy đủ
 RUN apt-get update && apt-get install -y \
     build-essential \
     libgl1-mesa-glx \
@@ -16,21 +20,22 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# 4. Nâng cấp pip và cài đặt Torch/Torchvision TRƯỚC (Bắt buộc có trước Detectron2)
+# 2. Nâng cấp pip và cài đặt Torch bản CPU trước
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
-# 5. ÉP CÀI Detectron2 bằng link trực tiếp (Bản CPU dành cho Linux Python 3.11)
-# Cách này bỏ qua việc tìm kiếm trên PyPI, tải thẳng file chuẩn về cài
-RUN pip install --no-cache-dir https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch2.1/detectron2-0.6%2Bcpu-cp311-cp311-linux_x86_64.whl
+# 3. CÀI ĐẶT CƯỠNG CHẾ Detectron2 (Dùng link trực tiếp cho Python 3.10)
+# Đây là mấu chốt để không bị lỗi No Module Found
+RUN pip install --no-cache-dir https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch2.1/detectron2-0.6%2Bcpu-cp310-cp310-linux_x86_64.whl
 
-# 6. Cài đặt các requirements còn lại (Bỏ detectron2 khỏi file txt nhé)
+# 4. Cài đặt các requirements còn lại
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 7. Copy code và chạy app
+# 5. Copy toàn bộ code
 COPY . .
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Sử dụng lệnh chạy tường minh để tránh nhầm Interpreter
+CMD ["python3", "-m", "streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
