@@ -1,39 +1,36 @@
-# 1. Sử dụng Python 3.12.3-slim để tối ưu dung lượng và đồng bộ môi trường
 FROM python:3.12.3-slim
 
-# 2. Cài đặt các thư viện hệ thống cần thiết (OpenCV, Git, Build tools)
+# 1. Cài đặt thư viện hệ thống (Đầy đủ nhất cho Build tools)
 RUN apt-get update && apt-get install -y \
     build-essential \
-    libgl1 \
+    libgl1-mesa-glx \
     libglib2.0-0 \
     git \
+    ninja-build \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+# 2. Tạo user cho Hugging Face
+RUN useradd -m -u 1000 user
+USER user
+ENV PATH="/home/user/.local/bin:${PATH}"
+WORKDIR /home/user/app
 
-# 3. Cài đặt và nâng cấp gdown bản mới nhất
-RUN pip install --no-cache-dir --upgrade gdown --break-system-packages
+# 3. Nâng cấp các công cụ Build (QUAN TRỌNG: Để tránh lỗi "getting requirements")
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel cython --break-system-packages
 
-# 4. TẢI MODEL: Sử dụng link trực tiếp để tránh lỗi Exit Code 2
-# ID file của bạn: 1voIzijFduwDECvD2OW_OUr4WONvWz9tW
-RUN gdown "https://drive.google.com/uc?id=1voIzijFduwDECvD2OW_OUr4WONvWz9tW" -O model_final.pth
-
-# 5. Cài đặt Torch bản CPU (Bắt buộc để không bị tràn RAM trên Render gói Free)
+# 4. Cài đặt Torch CPU bản mới nhất cho Python 3.12
 RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu --break-system-packages
 
-# 6. Cài đặt Detectron2 trực tiếp từ GitHub
-RUN pip install --no-cache-dir 'git+https://github.com/facebookresearch/detectron2.git' --break-system-packages
+# 5. Cài đặt Detectron2 (Sử dụng cờ --no-build-isolation để dùng chính setuptools đã cài ở bước 3)
+RUN pip install --no-cache-dir 'git+https://github.com/facebookresearch/detectron2.git' --break-system-packages --no-build-isolation
 
-# 7. Cài đặt các thư viện phụ trợ từ requirements.txt
-COPY requirements.txt .
+# 6. Cài đặt các thư viện phụ trợ từ requirements.txt
+COPY --chown=user requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt --break-system-packages
 
-# 8. Copy toàn bộ mã nguồn vào Container
-COPY . .
+# 7. Copy code và model (Đảm bảo model_final.pth đã được upload lên Hugging Face)
+COPY --chown=user . .
 
-# 9. Mở cổng kết nối cho Streamlit
-EXPOSE 8501
-
-# 10. Lệnh khởi chạy ứng dụng
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+EXPOSE 7860
+CMD ["streamlit", "run", "app.py", "--server.port=7860", "--server.address=0.0.0.0"]
