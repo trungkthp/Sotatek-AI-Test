@@ -2,6 +2,10 @@
 
 A comprehensive AI-powered system designed to automate the extraction of information from technical engineering drawings. This project utilizes Faster R-CNN (via Detectron2) for object detection and EasyOCR for intelligent text recognition, all integrated into a seamless Streamlit dashboard.
 
+# 🏗️ Technical Drawing Analysis Dashboard
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](LINK_SPACE_CỦA_TRUNG_TẠI_ĐÂY)
+
+> 💡 **Live Demo:** [Click vào đây để trải nghiệm App](LINK_SPACE_CỦA_TRUNG_TẠI_ĐÂY)
 ---
 
 ## **I. Overview**
