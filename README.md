@@ -87,7 +87,3 @@ pip install 'git+https://github.com/facebookresearch/detectron2.git' --break-sys
 
 - Placement: Tải xuống và di chuyển tệp vào thư mục output/.
 
-**4. Web Demo**
-
-
-- Web demo: https://huggingface.co/spaces/trungkthp/sotatek-ai-test
