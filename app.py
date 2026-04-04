@@ -31,27 +31,27 @@ st.markdown("""
 # --- 2. LOAD MODELS (Đã sửa đường dẫn để khớp với GitHub) ---
 @st.cache_resource
 def load_models():
-    # Lấy đường dẫn thư mục gốc của project
     base_path = os.path.dirname(os.path.abspath(__file__))
-    
     cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"))
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 3
     
-    # SỬA TẠI ĐÂY: Bỏ "output" vì file model_final.pth đang nằm ở thư mục gốc trên GitHub của bạn
-    model_path = os.path.join(base_path, "model_final.pth")
+    # Cách kiểm tra linh hoạt:
+    path_in_output = os.path.join(base_path, "output", "model_final.pth")
+    path_in_root = os.path.join(base_path, "model_final.pth")
     
-    if not os.path.exists(model_path):
-        st.error(f"❌ Model không tìm thấy tại: {model_path}")
-        st.info("💡 Mẹo: Hãy đảm bảo file model_final.pth đã được upload lên thư mục gốc của GitHub.")
+    if os.path.exists(path_in_output):
+        model_path = path_in_output
+    elif os.path.exists(path_in_root):
+        model_path = path_in_root
+    else:
+        st.error(f"❌ Không tìm thấy model tại {path_in_output} hoặc {path_in_root}")
         st.stop()
         
     cfg.MODEL.WEIGHTS = model_path
     cfg.MODEL.DEVICE = "cpu" 
     
-    predictor = DefaultPredictor(cfg)
-    reader = easyocr.Reader(['en'])
-    return predictor, reader
+    return DefaultPredictor(cfg), easyocr.Reader(['en'])
 
 # --- 3. SIDEBAR ---
 with st.sidebar:
