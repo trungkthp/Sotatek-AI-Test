@@ -3,4 +3,4 @@ opencv-python-headless
 easyocr
 numpy<2.0.0
 pandas
-typing-extensions>=4.12
+typing-extensions>=4.10.0
