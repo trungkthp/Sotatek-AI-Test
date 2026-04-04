@@ -5,7 +5,7 @@ A comprehensive AI-powered system designed to automate the extraction of informa
 # 🏗️ Technical Drawing Analysis Dashboard
 [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](LINK_SPACE_CỦA_TRUNG_TẠI_ĐÂY)
 
-> 💡 **Live Demo:** [Click vào đây để trải nghiệm App]([(https://huggingface.co/spaces/trungkthp/sotatek-ai-test)]
+> 💡 **Live Demo:** [Click vào đây để trải nghiệm App](https://huggingface.co/spaces/trungkthp/sotatek-ai-test)
 ---
 
 ## **I. Overview**
