@@ -1,11 +1,10 @@
 streamlit
 opencv-python-headless
 easyocr
-numpy
-pandas
+numpy>=1.26.0
+pandas>=2.1.0
 torch
 torchvision
-typing-extensions>=4.12
-# Cài detectron2 trực tiếp từ đường dẫn GitHub (Cách này dành cho Cloud)
---find-links https://dl.fbaipublicfiles.com/detectron2/wheels/cpu/torch2.1/index.html
-detectron2
+typing-extensions>=4.12.0
+# Dùng link cài trực tiếp cho Python 3.12
+detectron2 @ git+https://github.com/facebookresearch/detectron2.git
