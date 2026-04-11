@@ -66,8 +66,8 @@ Sotatek-AI-Test/
 
 **Clone the repository:**
 ```
-git clone https://github.com/trungkthp/Sotatek-AI-Test.git
-cd Sotatek-AI-Test
+git clone https://github.com/trungkthp/Drawing-Analysis.git
+cd Drawing-Analysis
 ```
 
 **Install dependencies:**
